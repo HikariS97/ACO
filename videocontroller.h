@@ -8,16 +8,10 @@
 #include <memory>
 #include <deque>
 
+#include "videoinputstream.h"
+
 // TODO: Move to abstract class.
-struct Data
-{
-  std::unique_ptr<uchar[]> data;
-  int dataSize;
-  int width;
-  int height;
-  int bytesPerLine;
-  int framerate;
-};
+struct Data;
 
 class VideoController : public QThread
 {

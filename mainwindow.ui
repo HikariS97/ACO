@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QGraphicsView" name="VideoDisplayer">
+   <widget class="VideoInputStream" name="videoInputStream_" native="true">
     <property name="geometry">
      <rect>
       <x>0</x>
@@ -23,8 +23,14 @@
       <height>480</height>
      </rect>
     </property>
+    <property name="focusPolicy">
+     <enum>Qt::NoFocus</enum>
+    </property>
+    <property name="toolTipDuration">
+     <number>-1</number>
+    </property>
    </widget>
-   <widget class="QWidget" name="VideoWidget" native="true">
+   <widget class="VideoInputStream" name="videoOutputStream_" native="true">
     <property name="geometry">
      <rect>
       <x>0</x>
@@ -32,6 +38,12 @@
       <width>640</width>
       <height>480</height>
      </rect>
+    </property>
+    <property name="focusPolicy">
+     <enum>Qt::NoFocus</enum>
+    </property>
+    <property name="toolTipDuration">
+     <number>-1</number>
     </property>
    </widget>
   </widget>
@@ -41,12 +53,20 @@
      <x>0</x>
      <y>0</y>
      <width>640</width>
-     <height>29</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>VideoInputStream</class>
+   <extends>QWidget</extends>
+   <header>videoinputstream.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

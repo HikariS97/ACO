@@ -54,7 +54,7 @@ bool VideoEncoder::init()
         config_->framerate_num = 30;
         config_->input_format = KVZ_FORMAT_P400;
         config_->threads = 4;
-        config_->qp = 21;
+        config_->qp = 0;
         config_->framerate_denom = 1;
         config_->hash = KVZ_HASH_NONE;
 
@@ -104,6 +104,7 @@ void VideoEncoder::close()
     pts_ = 0;
 }
 
+
 void VideoEncoder::encodeLoop(VideoInputStream *videoInputStream)
 {
     std::cout << "encode thread ID is " << QThread::currentThreadId() << std::endl;
@@ -116,7 +117,8 @@ void VideoEncoder::encodeLoop(VideoInputStream *videoInputStream)
             auto frame = std::move(videoInputStream->dataBuffer_.front());
             videoInputStream->dataBuffer_.pop_front();
             videoInputStream->bufferMutex_.unlock();
-            feedInput(rgb32toyuv400p(std::move(frame)));
+            auto input = rgb32toyuv420p(std::move(frame));
+            feedInput(std::move(input));
         }
         else
         {
@@ -150,93 +152,64 @@ void VideoEncoder::feedInput(std::unique_ptr<Data> input)
            input->data.get(),
            input->width*input->height);
 
-    //    memcpy(input_pic_->u,
-    //           &(input.get()[videodata_->width*videodata_->height]),
-    //            videodata_->width*videodata_->height/4);
-    //    memcpy(input_pic_->v,
-    //           &(input.get()[videodata_->width*videodata_->height + videodata_->width*videodata_->height/4]),
-    //            videodata_->width*videodata_->height/4);
+    memcpy(input_pic_->u,
+           &(input->data.get()[input->width*input->height]),
+            input->width*input->height/4);
+    memcpy(input_pic_->v,
+           &(input->data.get()[input->width*input->height + input->width*input->height/4]),
+            input->width*input->height/4);
 
     input_pic_->pts = pts_;
     ++pts_;
 
-//    encodingFrames_.push_front(*videodata_);
-    if(!api_->encoder_encode(enc_, input_pic_,
+    encodingFrames_.push_front(std::move(input));
+
+    api_->encoder_encode(enc_, input_pic_,
                              &data_out, &len_out,
                              &recon_pic, nullptr,
-                             &frame_info )) {
-        qDebug() << "Encode process failed";
-    }
+                             &frame_info );
 
     if(data_out != nullptr)
     {
         qDebug() << "encoded";
         parseEncodedFrame(data_out, len_out, recon_pic);
     }
-    else
-    {
-        // TODO: Something.
-    }
 }
 
-FILE *output = fopen("output.h265", "wb+");
 
+FILE *output = fopen("output.h265", "wb+");
 void VideoEncoder::parseEncodedFrame(kvz_data_chunk *data_out,
                                        uint32_t len_out, kvz_picture *recon_pic)
 {
-//    auto encodedFrame = encodingFrames_.back();
-//    encodingFrames_.pop_back();
+    auto encodedFrame = std::move(encodingFrames_.back());
+    encodingFrames_.pop_back();
 
-    // TODO: This part is to cancel delay. The delay is caused MAYBE by encoding deque.
-    // Note: Convert to Microsecond.
-    //    uint32_t delay = QDateTime::currentMSecsSinceEpoch() -
-    //            (encodedFrame->presentationTime.tv_sec * 1000 + encodedFrame->presentationTime.tv_usec/1000);
-    //    getStats()->sendDelay("video", delay);
-    //    getStats()->addEncodedPacket("video", len_out);
+    std::unique_ptr<uchar[]> hevc_frame(new uchar[len_out]);
+    uint8_t* writer = hevc_frame.get();
+    uint32_t dataWritten = 0;
 
-    // Free the memory before a new set.
-//    delete [] videodata_->data_;
-//    videodata_->data_ = new uint8_t[len_out];
-//    uint8_t* writer = videodata_->data_;
-//    videodata_->data_size_ = 0;
-int i = 0;
     for (kvz_data_chunk *chunk = data_out; chunk != nullptr; chunk = chunk->next)
     {
-        // 这个地方先观察是否与存HEVC至本地有关。
-        //        if(chunk->len > 3 && chunk->data[0] == 0 && chunk->data[1] == 0
-        //                &&( chunk->data[2] == 1 || (chunk->data[2] == 0 && chunk->data[3] == 1) )
-        //                && dataWritten != 0 && config_->slices != KVZ_SLICES_NONE)
-        //        {
-        //            // send previous packet if this is not the first
+        if(chunk->len > 3 && chunk->data[0] == 0 && chunk->data[1] == 0
+                &&( chunk->data[2] == 1 || (chunk->data[2] == 0 && chunk->data[3] == 1) )
+                && dataWritten != 0 && config_->slices != KVZ_SLICES_NONE)
+        {
+            std::unique_ptr<Data> slice = std::move(encodedFrame);
+            fwrite(slice->data.get(), sizeof (uchar), dataWritten, output);
 
-        //            // TODO: put delayes into deque, and set timestamp accordingly to get more accurate latency.
-        //            std::unique_ptr<Data> slice(shallowDataCopy(encodedFrame.get()));
-        //            sendEncodedFrame(std::move(slice), std::move(hevc_frame), dataWritten);
+            hevc_frame = std::unique_ptr<uint8_t[]>(new uint8_t[len_out - dataWritten]);
+            writer = hevc_frame.get();
+            dataWritten = 0;
+        }
 
-        //            hevc_frame = std::unique_ptr<uint8_t[]>(new uint8_t[len_out - dataWritten]);
-        //            writer = hevc_frame.get();
-        //            dataWritten = 0;
-        //        }
-        fwrite(chunk->data, sizeof (chunk->data[0]), chunk->len, output);
-        i++;
-//        memcpy(writer, chunk->data, chunk->len);
-//        writer += chunk->len;
-//        videodata_->data_size_ += chunk->len;
+        memcpy(writer, chunk->data, chunk->len);
+        writer += chunk->len;
+        dataWritten += chunk->len;
     }
 
     api_->chunk_free(data_out);
     api_->picture_free(recon_pic);
 
-    std::cout << "The value of i is: " << i << std::endl;
-
-    // send last packet reusing input structure
-    //    sendEncodedFrame(std::move(encodedFrame), std::move(hevc_frame), dataWritten);
+    fwrite(encodedFrame->data.get(), sizeof (uchar), dataWritten, output);
 }
 
-////void VideoEncoder::sendEncodedFrame(std::unique_ptr<uint8_t[]> input,
-////                                      std::unique_ptr<uint8_t[]> hevc_frame, uint32_t dataWritten)
-////{
-////    input->data_size = dataWritten;
-////    input->data = std::move(hevc_frame);
-////    sendOutput(std::move(input));
-////}

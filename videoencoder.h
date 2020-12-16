@@ -39,6 +39,10 @@ private:
   void parseEncodedFrame(kvz_data_chunk *data_out, uint32_t len_out,
                          kvz_picture *recon_pic);
 
+//  void sendEncodedFrame(std::unique_ptr<uint8_t[]> input,
+//                        std::unique_ptr<uint8_t[]> hevc_frame,
+//                        uint32_t dataWritten);
+
 
   int maxBufferSize_;
 
@@ -53,7 +57,10 @@ private:
   int32_t framerate_num_;
   int32_t framerate_denom_;
 
-  std::deque<std::unique_ptr<Data>> encodingFrames_;
+  // temporarily store frame data during encoding
+//  std::deque<Data> encodingFrames_;
+
+  Data *videodata_;
 };
 
 #endif // VIDEOENCODER_H

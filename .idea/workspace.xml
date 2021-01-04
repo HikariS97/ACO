@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
+    <generated />
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" ENABLED="true" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="749b6c1c-a7d9-4262-b958-5b028567fe94" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/build-ACO-Desktop_Qt_5_14_2_MinGW_64_bit-Debug/output.h265" beforeDir="false" afterPath="$PROJECT_DIR$/build-ACO-Desktop_Qt_5_14_2_MinGW_64_bit-Debug/output.h265" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kvazaar/kvazaar.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kvazaar/kvazaar.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/clock.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/clock.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/crypto.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/crypto.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/debug.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/debug.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/dispatch.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/dispatch.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/formats/generic.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/formats/generic.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/formats/hevc.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/formats/hevc.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/formats/opus.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/formats/opus.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/frame.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/frame.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/hostname.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/hostname.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/lib.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/lib.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/media_stream.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/media_stream.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/mingw_inet.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/mingw_inet.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/multicast.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/multicast.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/poll.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/poll.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/queue.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/queue.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/random.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/random.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/receiver.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/receiver.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/rtcp.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/rtcp.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/rtp.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/rtp.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/runner.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/runner.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/send.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/send.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/sender.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/sender.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/session.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/session.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/socket.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/socket.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/srtp.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/srtp.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/util.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/util.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/uvgrtp/zrtp.hh" beforeDir="false" afterPath="$PROJECT_DIR$/include/uvgrtp/zrtp.hh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mainwindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/mainwindow.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/videoencoder.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/videoencoder.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/videoencoder.h" beforeDir="false" afterPath="$PROJECT_DIR$/videoencoder.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/videosurface.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/videosurface.cpp" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1lzfQaXMwN4uBvBVxHEkQ7VH8Vv" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="cf.first.check.clang-format" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="749b6c1c-a7d9-4262-b958-5b028567fe94" name="Default Changelist" comment="" />
+      <created>1608604825432</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1608604825432</updated>
+      <workItem from="1608604827393" duration="82000" />
+      <workItem from="1608604927680" duration="2422000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

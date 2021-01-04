@@ -1,6 +1,7 @@
 #include "videosurface.h"
+#include <QDebug>
+#include <QThread>
 
-#include <iostream>
 
 VideoSurface::VideoSurface()
 {
@@ -12,7 +13,7 @@ bool VideoSurface::present(const QVideoFrame &frame)
         emit frameAvailable(frame);
         return true;
     }
-    std::cerr << "Not a valid frame" << std::endl;
+    qFatal("Not a valid frame");  // TODO：热插拔
     return false;
 }
 

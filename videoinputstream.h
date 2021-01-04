@@ -40,34 +40,43 @@ class VideoInputStream : public QWidget
 
 public:
     explicit VideoInputStream(QWidget *parent = nullptr);
+    ~VideoInputStream();
 
     void init();
     void uninit();
 
-    // 需要开放给其它的，进行处理的线程使用。
-    std::deque<std::unique_ptr<Data>> dataBuffer_;
-    QMutex bufferMutex_;
+    void start();
+    void stop();
+
+    void add_proc();
+    void delete_proc();
+
+    bool isrunning;  // TODO：设置友元。
+
 protected:
     void paintEvent(QPaintEvent *event) override;
 
 signals:
-    void startEncodeLoop(VideoInputStream *videoInputStream);
+    void close_proc();  // NOTE: Block Connection.
+    void transfer_frame(const QVideoFrame &frame);
 
 private slots:
-    void pushInBuffer();
-    void frameHandler(const QVideoFrame &frame);
-    void initEncoder();
+    void handle_frame(const QVideoFrame &frame);
+
+public slots:
+    void test_print();
 
 private:
-    void emptyBuffer();
-
     QCamera *camera_;
     VideoSurface *videoSurface_;
-    VideoEncoder *videoEncoder_;
-
-    bool onlyDisplay_ = false;  // TODO
     QVideoFrame currFrame_;
-    QThread *encoderThread_;
+
+    /* Current Processors List:
+        1. videoEncoder;
+        2. ?
+    */
+    QMutex numProcMutex_;
+    int numProc_;
 };
 
 #endif // VIDEOINPUTSTREAM_H

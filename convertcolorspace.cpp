@@ -2,8 +2,8 @@
 
 #include "videoinputstream.h"  // 主要是为了 Data
 
-/* 以下两个都是内存安全的 */
 
+/* 以下两个都是内存安全的 */
 template <typename T>
 static inline T clamp(T x)
 {

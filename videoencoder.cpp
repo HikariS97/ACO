@@ -12,6 +12,7 @@
 enum RETURN_STATUS {C_SUCCESS = 0, C_FAILURE = -1};
 
 VideoEncoder::VideoEncoder():
+    isrunning_(true),
     api_(nullptr),
     config_(nullptr),
     enc_(nullptr),
@@ -19,9 +20,13 @@ VideoEncoder::VideoEncoder():
     input_pic_(nullptr),
     framerate_num_(30),
     framerate_denom_(1)
-//    encodingFrames_()
+  //    encodingFrames_()
 {
     maxBufferSize_ = 3;
+}
+
+VideoEncoder::~VideoEncoder()
+{
 }
 
 bool VideoEncoder::init()
@@ -46,13 +51,13 @@ bool VideoEncoder::init()
         }
 
         api_->config_init(config_);
-        api_->config_parse(config_, "preset", "veryfast");  // TODO
+        api_->config_parse(config_, "preset", "ultrafast");  // TODO
 
         // TODO：随着传入的改变
         config_->width = 640;
         config_->height = 480;
         config_->framerate_num = 30;
-        config_->input_format = KVZ_FORMAT_P400;
+        config_->input_format = KVZ_FORMAT_P420;
         config_->threads = 4;
         config_->qp = 21;
         config_->framerate_denom = 1;
@@ -85,9 +90,10 @@ bool VideoEncoder::init()
     }
     return true;
 }
-
 void VideoEncoder::close()
 {
+    while (feedInput()) {}
+
     if(api_)
     {
         api_->encoder_close(enc_);
@@ -104,28 +110,6 @@ void VideoEncoder::close()
     pts_ = 0;
 }
 
-void VideoEncoder::encodeLoop(VideoInputStream *videoInputStream)
-{
-    std::cout << "encode thread ID is " << QThread::currentThreadId() << std::endl;
-
-    while (true)
-    {
-        videoInputStream->bufferMutex_.lock();
-        if (!videoInputStream->dataBuffer_.empty())
-        {
-            auto frame = std::move(videoInputStream->dataBuffer_.front());
-            videoInputStream->dataBuffer_.pop_front();
-            videoInputStream->bufferMutex_.unlock();
-            feedInput(rgb32toyuv400p(std::move(frame)));
-        }
-        else
-        {
-            waitDataBuffer_.wait(&(videoInputStream->bufferMutex_));  // 避免 while 消耗太多资源。
-            videoInputStream->bufferMutex_.unlock();
-        }
-
-    }
-}
 
 void VideoEncoder::feedInput(std::unique_ptr<Data> input)
 {
@@ -142,101 +126,176 @@ void VideoEncoder::feedInput(std::unique_ptr<Data> input)
             || config_->height != input->height
             || config_->framerate_num != input->framerate)
     {
-        // TODO: Alert something.
+        qFatal("Input size and encoder's config size not match.");
     }
 
     // copy input to kvazaar picture
+
     memcpy(input_pic_->y,
            input->data.get(),
            input->width*input->height);
 
-    //    memcpy(input_pic_->u,
-    //           &(input.get()[videodata_->width*videodata_->height]),
-    //            videodata_->width*videodata_->height/4);
-    //    memcpy(input_pic_->v,
-    //           &(input.get()[videodata_->width*videodata_->height + videodata_->width*videodata_->height/4]),
-    //            videodata_->width*videodata_->height/4);
+    memcpy(input_pic_->u,
+           &(input->data.get()[input->width*input->height]),
+            input->width*input->height/4);
+    memcpy(input_pic_->v,
+           &(input->data.get()[input->width*input->height + input->width*input->height/4]),
+            input->width*input->height/4);
 
     input_pic_->pts = pts_;
     ++pts_;
 
-//    encodingFrames_.push_front(*videodata_);
-    if(!api_->encoder_encode(enc_, input_pic_,
-                             &data_out, &len_out,
-                             &recon_pic, nullptr,
-                             &frame_info )) {
-        qDebug() << "Encode process failed";
-    }
+    encodingFrames_.push_front(std::move(input));
+
+    api_->encoder_encode(enc_, input_pic_,
+                         &data_out, &len_out,
+                         &recon_pic, nullptr,
+                         &frame_info );
 
     if(data_out != nullptr)
     {
-        qDebug() << "encoded";
         parseEncodedFrame(data_out, len_out, recon_pic);
     }
-    else
+}
+bool VideoEncoder::feedInput()
+{
+    // 代码重复。但是我不想改了。
+    if(!input_pic_)
     {
-        // TODO: Something.
+        fprintf(stderr, "Input picture was not allocated correctly.");
+    }
+    kvz_picture *recon_pic = nullptr;
+    kvz_frame_info frame_info;
+    kvz_data_chunk *data_out = nullptr;
+    uint32_t len_out = 0;
+
+    input_pic_->y = nullptr;
+    input_pic_->u = nullptr;
+    input_pic_->v = nullptr;
+
+    input_pic_->pts = pts_;
+    ++pts_;
+
+    api_->encoder_encode(enc_, input_pic_,
+                         &data_out, &len_out,
+                         &recon_pic, nullptr,
+                         &frame_info );
+
+    if(data_out != nullptr)
+    {
+        parseEncodedFrame(data_out, len_out, recon_pic);
+        return true;
+    }
+    else {
+        return false;
     }
 }
 
-FILE *output = fopen("output.h265", "wb+");
-
+FILE *output = fopen("output.h265", "wb+");  // TODO
 void VideoEncoder::parseEncodedFrame(kvz_data_chunk *data_out,
-                                       uint32_t len_out, kvz_picture *recon_pic)
+                                     uint32_t len_out, kvz_picture *recon_pic)
 {
-//    auto encodedFrame = encodingFrames_.back();
-//    encodingFrames_.pop_back();
+    //    if (encodingFrames_.empty()) {
+    //        auto encodedFrame = std::move(encodingFrames_.back());
+    //        encodingFrames_.pop_back();
+    //    }
 
-    // TODO: This part is to cancel delay. The delay is caused MAYBE by encoding deque.
-    // Note: Convert to Microsecond.
-    //    uint32_t delay = QDateTime::currentMSecsSinceEpoch() -
-    //            (encodedFrame->presentationTime.tv_sec * 1000 + encodedFrame->presentationTime.tv_usec/1000);
-    //    getStats()->sendDelay("video", delay);
-    //    getStats()->addEncodedPacket("video", len_out);
+    std::unique_ptr<uchar[]> hevc_frame(new uchar[len_out]);
+    uint8_t* writer = hevc_frame.get();
+    uint32_t dataWritten = 0;
 
-    // Free the memory before a new set.
-//    delete [] videodata_->data_;
-//    videodata_->data_ = new uint8_t[len_out];
-//    uint8_t* writer = videodata_->data_;
-//    videodata_->data_size_ = 0;
-int i = 0;
     for (kvz_data_chunk *chunk = data_out; chunk != nullptr; chunk = chunk->next)
     {
-        // 这个地方先观察是否与存HEVC至本地有关。
+
         //        if(chunk->len > 3 && chunk->data[0] == 0 && chunk->data[1] == 0
         //                &&( chunk->data[2] == 1 || (chunk->data[2] == 0 && chunk->data[3] == 1) )
         //                && dataWritten != 0 && config_->slices != KVZ_SLICES_NONE)
         //        {
-        //            // send previous packet if this is not the first
-
-        //            // TODO: put delayes into deque, and set timestamp accordingly to get more accurate latency.
-        //            std::unique_ptr<Data> slice(shallowDataCopy(encodedFrame.get()));
-        //            sendEncodedFrame(std::move(slice), std::move(hevc_frame), dataWritten);
+        //            std::unique_ptr<Data> slice = std::move(encodedFrame);
+        //            fwrite(hevc_frame.get(), sizeof (uchar), dataWritten, output);
 
         //            hevc_frame = std::unique_ptr<uint8_t[]>(new uint8_t[len_out - dataWritten]);
         //            writer = hevc_frame.get();
         //            dataWritten = 0;
         //        }
-        fwrite(chunk->data, sizeof (chunk->data[0]), chunk->len, output);
-        i++;
-//        memcpy(writer, chunk->data, chunk->len);
-//        writer += chunk->len;
-//        videodata_->data_size_ += chunk->len;
+
+        memcpy(writer, chunk->data, chunk->len);
+        writer += chunk->len;
+        dataWritten += chunk->len;
     }
 
     api_->chunk_free(data_out);
     api_->picture_free(recon_pic);
 
-    std::cout << "The value of i is: " << i << std::endl;
-
-    // send last packet reusing input structure
-    //    sendEncodedFrame(std::move(encodedFrame), std::move(hevc_frame), dataWritten);
+    fwrite(hevc_frame.get(), sizeof (uchar), dataWritten, output);
 }
 
-////void VideoEncoder::sendEncodedFrame(std::unique_ptr<uint8_t[]> input,
-////                                      std::unique_ptr<uint8_t[]> hevc_frame, uint32_t dataWritten)
-////{
-////    input->data_size = dataWritten;
-////    input->data = std::move(hevc_frame);
-////    sendOutput(std::move(input));
-////}
+void VideoEncoder::close_proc()
+{
+    if (isrunning_) {
+        close();
+        isrunning_ = false;
+    }
+    else {
+        qWarning("Logic Error! closing Encoder when it's closed.");
+    }
+}
+
+void VideoEncoder::receive_frame(const QVideoFrame &frame)
+{
+    pushInBuffer(frame);
+    encode();
+}
+void VideoEncoder::pushInBuffer(const QVideoFrame &frame)
+{
+    auto tmp_frame = static_cast<QVideoFrame>(frame);
+    tmp_frame.map(QAbstractVideoBuffer::ReadOnly);
+    QVideoFrame input = QVideoFrame(QImage(tmp_frame.bits(),            \
+                                           tmp_frame.width(),           \
+                                           tmp_frame.height(),          \
+                                           tmp_frame.bytesPerLine(),    \
+                                           QVideoFrame::imageFormatFromPixelFormat(tmp_frame.pixelFormat())\
+                                           ).convertToFormat(QImage::Format_RGBX8888));
+    tmp_frame.unmap();
+    if (!input.isValid()) {
+        qFatal("Input frame's format error.");
+        abort();
+    }
+
+    // Copy.
+    std::unique_ptr<Data> newFrame(new Data);
+    input.map(QAbstractVideoBuffer::ReadOnly);
+    newFrame->width = input.width();
+    newFrame->height = input.height();
+    newFrame->dataSize = input.mappedBytes();
+    newFrame->framerate = 30;  // TODO: 这怎么算来着？
+    newFrame->bytesPerLine = input.bytesPerLine();
+
+    std::unique_ptr<uchar[]> data(new uchar[newFrame->dataSize]);
+    memcpy(data.get(), input.bits(), newFrame->dataSize);
+    input.unmap();
+
+    newFrame->data = std::move(data);
+
+    // Push into buffer.
+    bufferMutex_.lock();
+    dataBuffer_.push_back(std::move(newFrame));
+    bufferMutex_.unlock();
+}
+void VideoEncoder::encode()
+{
+    bufferMutex_.lock();
+    auto frame = std::move(dataBuffer_.front());
+    dataBuffer_.pop_front();
+    bufferMutex_.unlock();
+    feedInput(rgb32toyuv420p(std::move(frame)));  // TODO
+}
+
+// NOTE：应该用不到，所有的 stop 都应该处理完 buffer 里的数据了。
+void VideoEncoder::emptyBuffer()
+{
+    bufferMutex_.lock();
+    std::deque<std::unique_ptr<Data>> tmp;
+    std::swap(dataBuffer_, tmp);
+    bufferMutex_.unlock();
+}
